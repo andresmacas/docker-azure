@@ -1,0 +1,46 @@
+# Docker
+- task: AzureWebAppContainer@1
+  inputs:
+    azureSubscription: 'Azure for Students(eae96d2d-5742-4098-88df-1e1919e65606)'
+    appName: 'practicalab11'
+    deployToSlotOrASE: true
+    resourceGroupName: 'docker-azure'
+    slotName: 'production'
+# Build and push an image to Azure Container Registry
+# https://docs.microsoft.com/azure/devops/pipelines/languages/docker
+
+trigger:
+- main
+
+resources:
+- repo: self
+
+variables:
+  # Container registry service connection established during pipeline creation
+  dockerRegistryServiceConnection: '25047a7d-2cb6-4dd3-a9bf-f6a822835519'
+  imageRepository: 'andresmacasdockerazure'
+  containerRegistry: 'practicalab11.azurecr.io'
+  dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
+  tag: '$(Build.BuildId)'
+
+  # Agent VM image name
+  vmImageName: 'ubuntu-latest'
+
+stages:
+- stage: Build
+  displayName: Build and push stage
+  jobs:
+  - job: Build
+    displayName: Build
+    pool:
+      vmImage: $(vmImageName)
+    steps:
+    - task: Docker@2
+      displayName: Build and push an image to container registry
+      inputs:
+        command: buildAndPush
+        repository: $(imageRepository)
+        dockerfile: $(dockerfilePath)
+        containerRegistry: $(dockerRegistryServiceConnection)
+        tags: |
+          $(tag)
